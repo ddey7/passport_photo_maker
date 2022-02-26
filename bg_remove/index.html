@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Parcel Sandbox</title>
+    <meta charset="UTF-8" />
+  </head>
+
+  <body>
+    <div id="app"></div>
+
+    <h1>PhotoRoom API web example</h1>
+    <p>
+      Choose an image and wait a little bit for it to be processed by PhotoRoom
+      API.
+    </p>
+
+    <div>
+      <input type="file" />
+    </div>
+
+    <div style="margin-top: 2em; max-width: 800px" id="result"></div>
+
+    <script src="./node_modules/blueimp-load-image/js/load-image.all.min.js"></script>
+    <!-- <script type="module" src="./index.js"></script> -->
+    <script>
+      window.onload = () => {
+        document
+          .querySelector("input[type=file]")
+          .addEventListener("change", async function () {
+            const resizedImage = await loadImage(this.files[0], {
+              // resize before sending to PhotoRoom for performance
+              maxWidth: 400,
+              maxHeight: 400,
+              crop: true,
+              canvas: true,
+            });
+
+            resizedImage.image.toBlob(async function (inputBlob) {
+              const formData = new FormData();
+              formData.append("image_file", inputBlob);
+
+              const response = await fetch(
+                "https://sdk.photoroom.com/v1/segment",
+                {
+                  method: "POST",
+                  headers: {
+                    "x-api-key": "a9eaa2d4d0acff822ef809ed689da9be5cd90939",
+                  },
+                  body: formData,
+                }
+              );
+
+              // https://developers.google.com/web/ilt/pwa/working-with-the-fetch-api#example_fetching_images
+              const outputBlob = await response.blob();
+              const outputImage = document.createElement("img");
+              document.querySelector("#result").appendChild(outputImage);
+              outputImage.style.width = "50%";
+              outputImage.src = URL.createObjectURL(outputBlob);
+            });
+          });
+      };
+    </script>
+  </body>
+</html>
